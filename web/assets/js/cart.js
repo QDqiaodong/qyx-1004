@@ -32,26 +32,64 @@ export function clearCart(storage = defaultStorage()) {
 export function addToCart(items, dish) {
   const next = [...items];
   const idx = next.findIndex((item) => item.dishId === dish.id);
+  const maxQty = dish.maxQuantityPerOrder || 10;
   if (idx >= 0) {
-    next[idx] = { ...next[idx], quantity: next[idx].quantity + 1 };
+    const newQty = next[idx].quantity + 1;
+    if (newQty > maxQty) {
+      return { items: next, error: `「${dish.name}」每单最多 ${maxQty} 份` };
+    }
+    next[idx] = { ...next[idx], quantity: newQty };
   } else {
+    if (1 > maxQty) {
+      return { items: next, error: `「${dish.name}」每单最多 ${maxQty} 份` };
+    }
     next.push({
       dishId: dish.id,
       name: dish.name,
       priceCents: dish.priceCents,
+      maxQuantityPerOrder: maxQty,
       quantity: 1
     });
   }
-  return next;
+  return { items: next, error: null };
+}
+
+export function canAddToCart(items, dish) {
+  const maxQty = dish.maxQuantityPerOrder || 10;
+  const current = items.find((item) => item.dishId === dish.id);
+  const currentQty = current ? current.quantity : 0;
+  return currentQty < maxQty;
+}
+
+export function isAtMaxQuantity(items, dishId) {
+  const current = items.find((item) => item.dishId === dishId);
+  if (!current) return false;
+  const maxQty = current.maxQuantityPerOrder || 10;
+  return current.quantity >= maxQty;
+}
+
+export function getMaxQuantity(items, dishId) {
+  const current = items.find((item) => item.dishId === dishId);
+  return current ? current.maxQuantityPerOrder || 10 : 10;
 }
 
 export function setQuantity(items, dishId, quantity) {
   if (quantity <= 0) {
-    return items.filter((item) => item.dishId !== dishId);
+    return { items: items.filter((item) => item.dishId !== dishId), error: null };
   }
-  return items.map((item) =>
-    item.dishId === dishId ? { ...item, quantity } : item
-  );
+  const current = items.find((item) => item.dishId === dishId);
+  if (current) {
+    const maxQty = current.maxQuantityPerOrder || 10;
+    if (quantity > maxQty) {
+      return { items, error: `「${current.name}」每单最多 ${maxQty} 份` };
+    }
+  }
+  return {
+    items: items.map((item) =>
+      item.dishId === dishId ? { ...item, quantity } : item
+    ),
+    error: null
+  };
 }
 
 export function removeItem(items, dishId) {

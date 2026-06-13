@@ -152,7 +152,8 @@ public class ApiHandler implements HttpHandler {
                 asString(body.get("name")),
                 asInteger(body.get("priceCents")),
                 asString(body.get("description")),
-                asBoolean(body.get("isAvailable"))
+                asBoolean(body.get("isAvailable")),
+                asIntegerNullable(body.get("maxQuantityPerOrder"))
             );
             HttpUtil.sendJson(exchange, 200, ApiResponse.ok(Map.of("id", dishId)));
             return;
@@ -169,7 +170,8 @@ public class ApiHandler implements HttpHandler {
                 asString(body.get("name")),
                 asInteger(body.get("priceCents")),
                 asString(body.get("description")),
-                asBoolean(body.get("isAvailable"))
+                asBoolean(body.get("isAvailable")),
+                asIntegerNullable(body.get("maxQuantityPerOrder"))
             );
             HttpUtil.sendJson(exchange, 200, ApiResponse.ok(Map.of("updated", true)));
             return;
@@ -240,6 +242,13 @@ public class ApiHandler implements HttpHandler {
             return number.intValue();
         }
         throw ApiException.badRequest("字段类型错误，期望整数");
+    }
+
+    private Integer asIntegerNullable(Object value) {
+        if (value == null) {
+            return null;
+        }
+        return asInteger(value);
     }
 
     private Boolean asBoolean(Object value) {

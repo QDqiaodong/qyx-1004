@@ -48,7 +48,7 @@ function hasActiveFilters(filters) {
 function renderList(filters = getFilters()) {
   if (!dishes.length) {
     const emptyText = hasActiveFilters(filters) ? "暂无符合条件的菜品" : "暂无菜品";
-    listBody.innerHTML = `<tr data-testid="merchant-dishes-empty"><td colspan="6" class="muted">${emptyText}</td></tr>`;
+    listBody.innerHTML = `<tr data-testid="merchant-dishes-empty"><td colspan="7" class="muted">${emptyText}</td></tr>`;
     return;
   }
 
@@ -60,6 +60,7 @@ function renderList(filters = getFilters()) {
         <td data-testid="merchant-dish-name-${dish.id}">${dish.name}</td>
         <td data-testid="merchant-dish-price-${dish.id}">${formatPrice(dish.priceCents)}</td>
         <td data-testid="merchant-dish-desc-${dish.id}">${dish.description || "-"}</td>
+        <td data-testid="merchant-dish-max-qty-${dish.id}">${dish.maxQuantityPerOrder}</td>
         <td data-testid="merchant-dish-status-${dish.id}">${dish.isAvailable ? "可售" : "下架"}</td>
         <td>
           <div class="inline-actions">
@@ -97,7 +98,8 @@ createForm.addEventListener("submit", async (event) => {
         name: String(formData.get("name") || "").trim(),
         priceCents: parseYuanToCents(formData.get("priceYuan")),
         description: String(formData.get("description") || "").trim(),
-        isAvailable: formData.get("isAvailable") === "on"
+        isAvailable: formData.get("isAvailable") === "on",
+        maxQuantityPerOrder: Number(formData.get("maxQuantityPerOrder")) || null
       }
     });
     createForm.reset();
@@ -144,7 +146,8 @@ listBody.addEventListener("click", async (event) => {
           name: dish.name,
           priceCents: dish.priceCents,
           description: dish.description,
-          isAvailable: !dish.isAvailable
+          isAvailable: !dish.isAvailable,
+          maxQuantityPerOrder: dish.maxQuantityPerOrder
         }
       });
       showMessage(messageEl, `菜品已${dish.isAvailable ? "下架" : "上架"}`, "success");
@@ -180,6 +183,13 @@ listBody.addEventListener("click", async (event) => {
           maxlength: 512
         },
         {
+          name: "maxQuantityPerOrder",
+          label: "每单最大份数",
+          type: "number",
+          placeholder: "默认 10",
+          defaultValue: dish.maxQuantityPerOrder
+        },
+        {
           name: "isAvailable",
           label: "上架可售",
           type: "checkbox",
@@ -195,7 +205,8 @@ listBody.addEventListener("click", async (event) => {
           name: String(formValues.name || "").trim(),
           priceCents: parseYuanToCents(formValues.priceYuan),
           description: String(formValues.description || "").trim(),
-          isAvailable: Boolean(formValues.isAvailable)
+          isAvailable: Boolean(formValues.isAvailable),
+          maxQuantityPerOrder: Number(formValues.maxQuantityPerOrder) || null
         }
       });
       showMessage(messageEl, "菜品编辑成功", "success");

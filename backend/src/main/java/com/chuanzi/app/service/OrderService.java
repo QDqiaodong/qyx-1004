@@ -47,12 +47,20 @@ public class OrderService {
 
         Map<Long, Dish> dishMap = dishRepository.findByIds(dishIds);
         List<String> unavailableMessages = new ArrayList<>();
+        Map<Long, Integer> quantityMap = itemRequests.stream()
+            .collect(Collectors.toMap(ItemRequest::dishId, ItemRequest::quantity));
         for (Long dishId : dishIds) {
             Dish dish = dishMap.get(dishId);
             if (dish == null) {
                 unavailableMessages.add("菜品ID=" + dishId + " 不存在");
             } else if (!dish.isAvailable()) {
                 unavailableMessages.add("菜品「" + dish.name() + "」已下架");
+            } else {
+                int requestedQty = quantityMap.getOrDefault(dishId, 0);
+                int maxQty = dish.maxQuantityPerOrder();
+                if (requestedQty > maxQty) {
+                    unavailableMessages.add("菜品「" + dish.name() + "」每单最多 " + maxQty + " 份，当前 " + requestedQty + " 份");
+                }
             }
         }
         if (!unavailableMessages.isEmpty()) {

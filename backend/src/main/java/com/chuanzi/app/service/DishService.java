@@ -28,20 +28,22 @@ public class DishService {
         return result;
     }
 
-    public long createDish(String name, Integer priceCents, String description, Boolean isAvailable) {
+    public long createDish(String name, Integer priceCents, String description, Boolean isAvailable, Integer maxQuantityPerOrder) {
         String normalizedName = requireDishName(name);
         int normalizedPrice = ValidationUtil.requirePriceCents(priceCents);
         String normalizedDesc = normalizeDescription(description);
         boolean available = isAvailable != null && isAvailable;
-        return dishRepository.createDish(normalizedName, normalizedPrice, normalizedDesc, available);
+        int normalizedMaxQty = requireMaxQuantityPerOrder(maxQuantityPerOrder);
+        return dishRepository.createDish(normalizedName, normalizedPrice, normalizedDesc, available, normalizedMaxQty);
     }
 
-    public void updateDish(long dishId, String name, Integer priceCents, String description, Boolean isAvailable) {
+    public void updateDish(long dishId, String name, Integer priceCents, String description, Boolean isAvailable, Integer maxQuantityPerOrder) {
         String normalizedName = requireDishName(name);
         int normalizedPrice = ValidationUtil.requirePriceCents(priceCents);
         String normalizedDesc = normalizeDescription(description);
         boolean available = isAvailable != null && isAvailable;
-        boolean updated = dishRepository.updateDish(dishId, normalizedName, normalizedPrice, normalizedDesc, available);
+        int normalizedMaxQty = requireMaxQuantityPerOrder(maxQuantityPerOrder);
+        boolean updated = dishRepository.updateDish(dishId, normalizedName, normalizedPrice, normalizedDesc, available, normalizedMaxQty);
         if (!updated) {
             throw ApiException.notFound("菜品不存在");
         }
@@ -80,6 +82,21 @@ public class DishService {
             return "";
         }
         return keyword.trim();
+    }
+
+    private int requireMaxQuantityPerOrder(Integer maxQuantityPerOrder) {
+        int defaultValue = 10;
+        if (maxQuantityPerOrder == null) {
+            return defaultValue;
+        }
+        int value = maxQuantityPerOrder;
+        if (value <= 0) {
+            throw ApiException.badRequest("每单最大份数必须大于 0");
+        }
+        if (value > 999) {
+            throw ApiException.badRequest("每单最大份数不能超过 999");
+        }
+        return value;
     }
 
     private Boolean parseAvailabilityFilter(String isAvailable, boolean includeUnavailable) {

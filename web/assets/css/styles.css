@@ -1228,6 +1228,62 @@ tbody tr:last-child td:last-child {
 	}
 }
 
+.dish-limit-hint {
+	font-size: 12px;
+	color: var(--danger);
+	margin-top: 4px;
+	font-weight: 500;
+}
+
+.cart-limit-hint {
+	font-size: 11px;
+	color: var(--danger);
+	margin-top: 2px;
+	font-weight: 500;
+}
+
+.mobile-cart-limit-hint {
+	font-size: 12px;
+	color: var(--danger);
+	margin-top: 4px;
+	font-weight: 500;
+}
+
+button.disabled-with-hint,
+button.disabled-with-hint:disabled {
+	background: var(--surface-soft);
+	color: var(--muted);
+	border: 1px solid var(--border);
+	cursor: not-allowed;
+	opacity: 0.7;
+	box-shadow: none;
+}
+
+button.disabled-with-hint:hover:not(:disabled) {
+	background: var(--surface-soft);
+	color: var(--muted);
+	transform: none;
+	box-shadow: none;
+}
+
+.cart-item-quantity-controls button:disabled,
+.mobile-cart-item-quantity-controls button:disabled {
+	background: var(--surface-soft);
+	color: var(--muted);
+	border-color: var(--border);
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.cart-item-quantity-controls button:disabled:hover,
+.mobile-cart-item-quantity-controls button:disabled:hover {
+	background: var(--surface-soft);
+	color: var(--muted);
+	border-color: var(--border);
+	transform: none;
+	box-shadow: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
 	*,
 	*::before,

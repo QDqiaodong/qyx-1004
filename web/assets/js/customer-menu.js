@@ -2,6 +2,7 @@ import { apiRequest, showMessage } from "/assets/js/api.js";
 import { requireAuth } from "/assets/js/auth.js";
 import {
   addToCart,
+  canAddToCart,
   clearCart,
   formatPrice,
   loadCart,
@@ -33,14 +34,30 @@ let cart = loadCart();
 function renderDishes() {
   dishesBody.innerHTML = dishes
     .map(
-      (dish) => `
+      (dish) => {
+        const canAdd = canAddToCart(cart, dish);
+        const maxQty = dish.maxQuantityPerOrder || 10;
+        const currentItem = cart.find((item) => item.dishId === dish.id);
+        const currentQty = currentItem ? currentItem.quantity : 0;
+        const reason = !canAdd ? `已达每单上限 ${maxQty} 份` : "";
+        return `
       <tr data-testid="dish-row-${dish.id}">
         <td>${dish.name}</td>
         <td>${formatPrice(dish.priceCents)}</td>
         <td>${dish.description || "-"}</td>
-        <td><button data-action="add" data-id="${dish.id}" data-testid="dish-add-${dish.id}">加入购物车</button></td>
+        <td>
+          <button 
+            data-action="add" 
+            data-id="${dish.id}" 
+            data-testid="dish-add-${dish.id}"
+            ${!canAdd ? "disabled title=\"" + reason + "\"" : ""}
+            class="${!canAdd ? "disabled-with-hint" : ""}"
+          >${canAdd ? "加入购物车" : "已达上限"}</button>
+          ${!canAdd ? `<div class="dish-limit-hint" data-testid="dish-limit-hint-${dish.id}">${reason}（已选 ${currentQty} 份）</div>` : ""}
+        </td>
       </tr>
-    `
+    `;
+      }
     )
     .join("");
 }
@@ -58,20 +75,30 @@ function renderSidebarCart() {
 
   cartItemsContainer.innerHTML = cart
     .map(
-      (item) => `
+      (item) => {
+        const maxQty = item.maxQuantityPerOrder || 10;
+        const atMax = item.quantity >= maxQty;
+        return `
       <div class="cart-item" data-testid="cart-row-${item.dishId}">
         <div class="cart-item-info">
           <div class="cart-item-name">${item.name}</div>
           <div class="cart-item-price">${formatPrice(item.priceCents)} / 份</div>
+          ${atMax ? `<div class="cart-limit-hint" data-testid="cart-limit-hint-${item.dishId}">每单最多 ${maxQty} 份</div>` : ""}
         </div>
         <div class="cart-item-quantity-controls">
           <button data-action="decrease" data-id="${item.dishId}" class="secondary" data-testid="cart-decrease-${item.dishId}">-</button>
           <span class="cart-item-quantity" data-testid="cart-quantity-${item.dishId}">${item.quantity}</span>
-          <button data-action="increase" data-id="${item.dishId}" data-testid="cart-increase-${item.dishId}">+</button>
+          <button 
+            data-action="increase" 
+            data-id="${item.dishId}" 
+            data-testid="cart-increase-${item.dishId}"
+            ${atMax ? "disabled title=\"每单最多 " + maxQty + " 份\"" : ""}
+          >+</button>
         </div>
         <div class="cart-item-subtotal" data-testid="cart-subtotal-${item.dishId}">${formatPrice(item.priceCents * item.quantity)}</div>
       </div>
-    `
+    `;
+      }
     )
     .join("");
 }
@@ -89,20 +116,30 @@ function renderMobileCartDetail() {
 
   mobileCartDetailContent.innerHTML = cart
     .map(
-      (item) => `
+      (item) => {
+        const maxQty = item.maxQuantityPerOrder || 10;
+        const atMax = item.quantity >= maxQty;
+        return `
       <div class="mobile-cart-item" data-testid="mobile-cart-row-${item.dishId}">
         <div class="mobile-cart-item-info">
           <div class="mobile-cart-item-name">${item.name}</div>
           <div class="mobile-cart-item-price">${formatPrice(item.priceCents)} / 份</div>
+          ${atMax ? `<div class="mobile-cart-limit-hint" data-testid="mobile-cart-limit-hint-${item.dishId}">每单最多 ${maxQty} 份</div>` : ""}
         </div>
         <div class="mobile-cart-item-quantity-controls">
           <button data-action="decrease" data-id="${item.dishId}" class="secondary" data-testid="mobile-cart-decrease-${item.dishId}">-</button>
           <span class="mobile-cart-item-quantity" data-testid="mobile-cart-quantity-${item.dishId}">${item.quantity}</span>
-          <button data-action="increase" data-id="${item.dishId}" data-testid="mobile-cart-increase-${item.dishId}">+</button>
+          <button 
+            data-action="increase" 
+            data-id="${item.dishId}" 
+            data-testid="mobile-cart-increase-${item.dishId}"
+            ${atMax ? "disabled title=\"每单最多 " + maxQty + " 份\"" : ""}
+          >+</button>
         </div>
         <div class="mobile-cart-item-subtotal" data-testid="mobile-cart-subtotal-${item.dishId}">${formatPrice(item.priceCents * item.quantity)}</div>
       </div>
-    `
+    `;
+      }
     )
     .join("");
 }
@@ -162,8 +199,14 @@ dishesBody.addEventListener("click", (event) => {
   const id = Number(target.dataset.id);
   const dish = dishes.find((d) => d.id === id);
   if (!dish) return;
-  cart = addToCart(cart, dish);
+  const result = addToCart(cart, dish);
+  if (result.error) {
+    showMessage(messageEl, result.error);
+    return;
+  }
+  cart = result.items;
   saveCart(cart);
+  renderDishes();
   renderCart();
   showMessage(messageEl, "已加入购物车", "success");
 });
@@ -176,14 +219,22 @@ cartItemsContainer.addEventListener("click", (event) => {
   const current = cart.find((item) => item.dishId === id);
   if (!current) return;
 
+  let result;
   if (action === "increase") {
-    cart = setQuantity(cart, id, current.quantity + 1);
+    result = setQuantity(cart, id, current.quantity + 1);
   }
   if (action === "decrease") {
-    cart = setQuantity(cart, id, current.quantity - 1);
+    result = setQuantity(cart, id, current.quantity - 1);
   }
+  if (!result) return;
 
+  if (result.error) {
+    showMessage(messageEl, result.error);
+    return;
+  }
+  cart = result.items;
   saveCart(cart);
+  renderDishes();
   renderCart();
 });
 
@@ -196,14 +247,22 @@ if (mobileCartDetailContent) {
     const current = cart.find((item) => item.dishId === id);
     if (!current) return;
 
+    let result;
     if (action === "increase") {
-      cart = setQuantity(cart, id, current.quantity + 1);
+      result = setQuantity(cart, id, current.quantity + 1);
     }
     if (action === "decrease") {
-      cart = setQuantity(cart, id, current.quantity - 1);
+      result = setQuantity(cart, id, current.quantity - 1);
     }
+    if (!result) return;
 
+    if (result.error) {
+      showMessage(messageEl, result.error);
+      return;
+    }
+    cart = result.items;
     saveCart(cart);
+    renderDishes();
     renderCart();
   });
 }
