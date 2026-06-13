@@ -81,3 +81,4 @@ data/uploads/
 # ====================== 9、本地打包发布产物 ======================
 release/*.tar.gz
 frontend/package-lock.json
+test-results/*
