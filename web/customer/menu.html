@@ -51,13 +51,24 @@
       </div>
 
       <div class="mobile-cart-bar" data-testid="mobile-cart-bar">
-        <div class="mobile-cart-info">
+        <div class="mobile-cart-info" id="mobileCartToggle" data-testid="mobile-cart-toggle">
           <span class="mobile-cart-icon">🛒</span>
           <span class="mobile-cart-count" id="mobileCartCount" data-testid="mobile-cart-count">0</span>
           <span class="mobile-cart-total" id="mobileCartTotal" data-testid="mobile-cart-total">¥0.00</span>
+          <span class="mobile-cart-arrow" id="mobileCartArrow">▼</span>
         </div>
         <button id="mobileSubmitBtn" type="button" class="mobile-submit-btn" data-testid="mobile-submit-order">去结算</button>
       </div>
+
+      <div class="mobile-cart-detail" id="mobileCartDetail" data-testid="mobile-cart-detail">
+        <div class="mobile-cart-detail-header">
+          <h3>已选菜品</h3>
+          <button class="mobile-cart-close" id="mobileCartClose" data-testid="mobile-cart-close">×</button>
+        </div>
+        <div class="mobile-cart-detail-content" id="mobileCartDetailContent" data-testid="mobile-cart-detail-content"></div>
+      </div>
+
+      <div class="mobile-cart-overlay" id="mobileCartOverlay" data-testid="mobile-cart-overlay"></div>
 
       <p id="message" class="error" data-testid="customer-menu-message"></p>
     </main>
