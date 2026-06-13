@@ -5,7 +5,6 @@ import {
   clearCart,
   formatPrice,
   loadCart,
-  removeItem,
   saveCart,
   setQuantity,
   toOrderItems,
