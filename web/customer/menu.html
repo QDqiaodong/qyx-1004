@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/assets/css/styles.css" />
   </head>
   <body>
-    <main>
+    <main class="menu-page">
       <div class="header-bar">
         <h1>顾客点餐</h1>
         <div class="inline-actions">
@@ -16,41 +16,50 @@
         </div>
       </div>
 
-      <section class="panel">
-        <h2>可售菜品</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>名称</th>
-              <th>价格</th>
-              <th>描述</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody id="dishesBody" data-testid="customer-dishes-body"></tbody>
-        </table>
-      </section>
+      <div class="menu-layout">
+        <section class="panel dishes-panel">
+          <h2>可售菜品</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>名称</th>
+                <th>价格</th>
+                <th>描述</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="dishesBody" data-testid="customer-dishes-body"></tbody>
+          </table>
+        </section>
 
-      <section class="panel">
-        <h2>购物车</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>菜品</th>
-              <th>单价</th>
-              <th>数量</th>
-              <th>小计</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody id="cartBody" data-testid="customer-cart-body"></tbody>
-        </table>
-        <div class="header-bar" style="margin-top: 12px">
-          <strong>总计：<span id="cartTotal" data-testid="customer-cart-total">¥0.00</span></strong>
-          <button id="submitOrderBtn" type="button" data-testid="customer-submit-order">提交订单</button>
+        <aside class="cart-sidebar" data-testid="customer-cart-sidebar">
+          <div class="cart-sidebar-header">
+            <h3>已选菜品</h3>
+            <span class="cart-count-badge" id="cartCountBadge" data-testid="cart-count-badge">0</span>
+          </div>
+          <div class="cart-sidebar-content">
+            <div id="cartItemsContainer" data-testid="cart-items-container"></div>
+          </div>
+          <div class="cart-sidebar-footer">
+            <div class="cart-total-row">
+              <span>总计</span>
+              <strong id="sidebarTotal" data-testid="sidebar-total">¥0.00</strong>
+            </div>
+            <button id="submitOrderBtn" type="button" class="submit-order-btn" data-testid="customer-submit-order">提交订单</button>
+          </div>
+        </aside>
+      </div>
+
+      <div class="mobile-cart-bar" data-testid="mobile-cart-bar">
+        <div class="mobile-cart-info">
+          <span class="mobile-cart-icon">🛒</span>
+          <span class="mobile-cart-count" id="mobileCartCount" data-testid="mobile-cart-count">0</span>
+          <span class="mobile-cart-total" id="mobileCartTotal" data-testid="mobile-cart-total">¥0.00</span>
         </div>
-        <p id="message" class="error" data-testid="customer-menu-message"></p>
-      </section>
+        <button id="mobileSubmitBtn" type="button" class="mobile-submit-btn" data-testid="mobile-submit-order">去结算</button>
+      </div>
+
+      <p id="message" class="error" data-testid="customer-menu-message"></p>
     </main>
     <script type="module" src="/assets/js/customer-menu.js"></script>
   </body>

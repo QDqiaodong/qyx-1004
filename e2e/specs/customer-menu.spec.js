@@ -16,7 +16,7 @@ test('CUSTOMER-MENU-02 购物车分支 + localStorage 恢复 + 正常下单', as
   await expect(page).toHaveURL(/\/customer\/menu\.html/);
 
   await expect(page.getByTestId('cart-empty')).toBeVisible();
-  await expect(page.getByTestId('customer-cart-total')).toHaveText('¥0.00');
+  await expect(page.getByTestId('sidebar-total')).toHaveText('¥0.00');
 
   const firstAdd = page.locator('[data-testid^="dish-add-"]').first();
   const dishId = await firstAdd.getAttribute('data-id');
@@ -30,7 +30,8 @@ test('CUSTOMER-MENU-02 购物车分支 + localStorage 恢复 + 正常下单', as
   await page.getByTestId(`cart-decrease-${dishId}`).click({ force: true });
   await expect(page.getByTestId(`cart-quantity-${dishId}`)).toHaveText('2');
 
-  await page.getByTestId(`cart-remove-${dishId}`).click({ force: true });
+  await page.getByTestId(`cart-decrease-${dishId}`).click({ force: true });
+  await page.getByTestId(`cart-decrease-${dishId}`).click({ force: true });
   await expect(page.getByTestId('cart-empty')).toBeVisible();
 
   await page.getByTestId('customer-submit-order').click({ force: true });
@@ -94,5 +95,5 @@ test('CUSTOMER-MENU-04 localStorage 损坏 JSON 分支恢复为空', async ({ pa
   await page.reload();
 
   await expect(page.getByTestId('cart-empty')).toBeVisible();
-  await expect(page.getByTestId('customer-cart-total')).toHaveText('¥0.00');
+  await expect(page.getByTestId('sidebar-total')).toHaveText('¥0.00');
 });

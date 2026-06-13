@@ -13,10 +13,15 @@ import {
 } from "/assets/js/cart.js";
 
 const dishesBody = document.getElementById("dishesBody");
-const cartBody = document.getElementById("cartBody");
-const cartTotalEl = document.getElementById("cartTotal");
+const cartItemsContainer = document.getElementById("cartItemsContainer");
+const cartCountBadge = document.getElementById("cartCountBadge");
+const sidebarTotal = document.getElementById("sidebarTotal");
 const messageEl = document.getElementById("message");
 const submitBtn = document.getElementById("submitOrderBtn");
+const mobileSubmitBtn = document.getElementById("mobileSubmitBtn");
+const mobileCartCount = document.getElementById("mobileCartCount");
+const mobileCartTotal = document.getElementById("mobileCartTotal");
+const mobileCartBar = document.querySelector(".mobile-cart-bar");
 
 let dishes = [];
 let cart = loadCart();
@@ -37,33 +42,49 @@ function renderDishes() {
 }
 
 function renderCart() {
+  const total = totalCents(cart);
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  sidebarTotal.textContent = formatPrice(total);
+  mobileCartTotal.textContent = formatPrice(total);
+  cartCountBadge.textContent = totalItems;
+  mobileCartCount.textContent = totalItems;
+
+  if (submitBtn) submitBtn.disabled = cart.length === 0;
+  if (mobileSubmitBtn) mobileSubmitBtn.disabled = cart.length === 0;
+
+  if (mobileCartBar) {
+    mobileCartBar.classList.toggle("empty", cart.length === 0);
+  }
+
   if (!cart.length) {
-    cartBody.innerHTML = `<tr data-testid="cart-empty"><td colspan="5" class="muted">购物车为空</td></tr>`;
-    cartTotalEl.textContent = formatPrice(0);
+    cartItemsContainer.innerHTML = `
+      <div class="cart-empty" data-testid="cart-empty">
+        <div class="cart-empty-icon">🛒</div>
+        <div class="cart-empty-text">购物车空空如也<br/>快去挑选美味菜品吧</div>
+      </div>
+    `;
     return;
   }
 
-  cartBody.innerHTML = cart
+  cartItemsContainer.innerHTML = cart
     .map(
       (item) => `
-      <tr data-testid="cart-row-${item.dishId}">
-        <td>${item.name}</td>
-        <td>${formatPrice(item.priceCents)}</td>
-        <td>
-          <div class="inline-actions">
-            <button data-action="decrease" data-id="${item.dishId}" class="secondary" data-testid="cart-decrease-${item.dishId}">-</button>
-            <span data-testid="cart-quantity-${item.dishId}">${item.quantity}</span>
-            <button data-action="increase" data-id="${item.dishId}" data-testid="cart-increase-${item.dishId}">+</button>
-          </div>
-        </td>
-        <td data-testid="cart-subtotal-${item.dishId}">${formatPrice(item.priceCents * item.quantity)}</td>
-        <td><button data-action="remove" data-id="${item.dishId}" class="danger" data-testid="cart-remove-${item.dishId}">移除</button></td>
-      </tr>
+      <div class="cart-item" data-testid="cart-row-${item.dishId}">
+        <div class="cart-item-info">
+          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-price">${formatPrice(item.priceCents)} / 份</div>
+        </div>
+        <div class="cart-item-quantity-controls">
+          <button data-action="decrease" data-id="${item.dishId}" class="secondary" data-testid="cart-decrease-${item.dishId}">-</button>
+          <span class="cart-item-quantity" data-testid="cart-quantity-${item.dishId}">${item.quantity}</span>
+          <button data-action="increase" data-id="${item.dishId}" data-testid="cart-increase-${item.dishId}">+</button>
+        </div>
+        <div class="cart-item-subtotal" data-testid="cart-subtotal-${item.dishId}">${formatPrice(item.priceCents * item.quantity)}</div>
+      </div>
     `
     )
     .join("");
-
-  cartTotalEl.textContent = formatPrice(totalCents(cart));
 }
 
 async function loadDishes() {
@@ -85,7 +106,7 @@ dishesBody.addEventListener("click", (event) => {
   showMessage(messageEl, "已加入购物车", "success");
 });
 
-cartBody.addEventListener("click", (event) => {
+cartItemsContainer.addEventListener("click", (event) => {
   const target = event.target.closest("button");
   if (!target) return;
   const id = Number(target.dataset.id);
@@ -99,15 +120,12 @@ cartBody.addEventListener("click", (event) => {
   if (action === "decrease") {
     cart = setQuantity(cart, id, current.quantity - 1);
   }
-  if (action === "remove") {
-    cart = removeItem(cart, id);
-  }
 
   saveCart(cart);
   renderCart();
 });
 
-submitBtn.addEventListener("click", async () => {
+async function submitOrder() {
   if (!cart.length) {
     showMessage(messageEl, "购物车为空");
     return;
@@ -128,7 +146,12 @@ submitBtn.addEventListener("click", async () => {
   } catch (error) {
     showMessage(messageEl, error.message || "下单失败");
   }
-});
+}
+
+submitBtn.addEventListener("click", submitOrder);
+if (mobileSubmitBtn) {
+  mobileSubmitBtn.addEventListener("click", submitOrder);
+}
 
 loadDishes().catch((error) => {
   showMessage(messageEl, error.message || "加载菜品失败");
